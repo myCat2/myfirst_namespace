@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ambow.booksmanager.dao.BorrowMapper">
+
+  <resultMap id="BaseResultMap" type="com.ambow.booksmanager.domain.Borrow" autoMapping="true">
+    <id column="borrow_id" jdbcType="BIGINT" property="borrowId" />
+    <result column="bookType_id"  property="booktypeId" />
+    <result column="book_id"  property="bookId" />
+    <result column="reader_id"  property="readerId" />
+    <result column="emp_id"  property="empId" />
+    <result column="borrow_isback"  property="borrowIsback" />
+    <result column="borrow_date"  property="borrowDate" />
+    <result column="back_date"  property="backDate" />
+    <result column="borrow_isdamaged"  property="borrowIsdamaged" />
+    <result column="borrow_day"  property="borrowDay" />
+    <result column="borrow_exceed_day"  property="borrowExceedDay" />
+    <result column="borrow_price"  property="borrowPrice" />
+    <result column="borrow_state"  property="borrowState" />
+  </resultMap>
+  
+  <select id="queryBorrowList" resultType="com.ambow.booksmanager.domain.BorrowDto">
+  	<!-- 
+  		borrowId booktypeId bookId readerId empId borrowIsback borrowDate
+	    backDate borrowIsdamaged borrowDay borrowExceedDay borrowPrice
+	    borrowState bookName bookTypeName readerName
+  	 -->
+  	
+  	
+	SELECT borrow.borrow_id borrowId,borrow.bookType_id booktypeId,borrow.book_id bookId,borrow.reader_id readerId,
+	borrow.emp_id empId,borrow.borrow_isback borrowIsback,borrow.borrow_date borrowDate,
+	borrow.back_date backDate,borrow.borrow_isdamaged borrowIsdamaged,borrow.borrow_day borrowDay,
+	borrow.borrow_exceed_day borrowExceedDay,borrow.borrow_price borrowPrice,borrow.borrow_state borrowState,
+	book.book_name bookName,booktype.bookType_name bookTypeName,reader.reader_name readerName 
+	FROM borrow 
+	LEFT JOIN book ON borrow.book_id=book.book_id
+	LEFT JOIN booktype ON borrow.bookType_id=booktype.bookType_id
+	LEFT JOIN reader ON borrow.reader_id=reader.reader_id
+	WHERE CONCAT(IFNULL(book.book_name,''),IFNULL(booktype.bookType_name,''),IFNULL(reader.reader_name,'')) 
+	LIKE #{key} 
+	AND borrow.borrow_state=1
+  </select>
+  
+  <select id="queryCount" resultType="Integer">
+  	SELECT count(*) 
+  	FROM borrow 
+  	WHERE reader_id=#{readerId} AND borrow_state=1
+  </select>
+  
+  <select id="queryById" resultMap="BaseResultMap">
+  	SELECT * FROM 
+  	borrow 
+  	WHERE borrow_id=#{borrowId} and borrow_state=1;
+  </select>
+  
+  <select id="queryHistoricalBorrow" resultType="map">
+  	SELECT book.book_name bookName,borrow.borrow_date borrowTime,
+		borrow.back_date returnTime,borrow.borrow_price borrowPrice
+	FROM borrow INNER JOIN book ON borrow.book_id=book.book_id 
+	WHERE borrow.reader_id=#{readerId} 
+  </select>
+  
+  <select id="queryBorrowDays" resultType="Integer">
+  	SELECT book_borrow_days 
+  	FROM book 
+  	WHERE book_id=#{bookId}
+  </select>
+  
+  <insert id="insertBorrow" parameterType="com.ambow.booksmanager.domain.Borrow">
+  	INSERT INTO borrow(bookType_id,
+  	book_id,reader_id,emp_id,borrow_isback,borrow_date,borrow_state,borrow_day)
+	VALUES(#{booktypeId},#{bookId},#{readerId},#{empId},
+	0,NOW(),1,#{borrowDay})
+  </insert>
+  
+ 
+  
+  <!-- 删除记录 -->
+  <update id="deleteBorrow">
+    UPDATE borrow SET borrow_state=0 
+    WHERE borrow_id in
+    <foreach collection="ids" open="(" close=")" item="id" separator=",">
+    	#{id}
+    </foreach>
+  </update>
+  
+  <!-- 插入归还信息 -->
+  <update id="insertReturn" parameterType="com.ambow.booksmanager.domain.Borrow">
+  	update borrow 
+  		<set> 
+	  		<if test="backDate!=null">
+	  			back_date=NOW(),
+	  		</if>
+		  	<if test="borrowIsdamaged!=null ">
+	  			borrow_isdamaged=#{borrowIsdamaged},
+	  		</if>
+	  		<if test="borrowExceedDay!=null ">
+	  			borrow_exceed_day=#{borrowExceedDay},
+	  		</if>
+	  		<if test="borrowPrice!=null ">
+	  			borrow_price=#{borrowPrice},
+	  		</if>
+	  		<if test="borrowState!=null ">
+	  			borrow_state=#{borrowState},
+	  		</if>  	
+	  		<if test="borrowIsback!=null ">
+	  			borrow_isback=#{borrowIsback}
+	  		</if> 
+  		</set>
+  	where borrow_id=#{borrowId}
+  </update>
+  
+  
+</mapper>

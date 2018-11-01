@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ambow.booksmanager.dao.BookMapper">
+  <resultMap id="BaseResultMap" type="com.ambow.booksmanager.domain.Book" autoMapping="true">
+    <id column="book_id"  property="bookId" />
+    <result column="bookType_id" property="bookTypeId" />
+    <result column="book_name" jdbcType="VARCHAR" property="bookName" />
+    <result column="book_writer" jdbcType="VARCHAR" property="bookWriter" />
+    <result column="book_translator" jdbcType="VARCHAR" property="bookTranslator" />
+  	<result column="book_public_date"  property="bookPublicDate" />
+   	<result column="book_public_house" jdbcType="VARCHAR" property="bookPublicHouse" />
+  	<result column="book_num"  property="bookNum" />
+  	<result column="book_price"  property="bookPrice" />
+	<result column="book_state"  property="bookState" />
+	<result column="book_isborrow"  property="bookIsborrow" />
+	<result column="book_borrow_days"  property="bookBorrowDays" />
+	<result column="book_borrow_price" jdbcType="DECIMAL" property="bookBorrowPrice" />
+	<result column="book_return_time" property="bookReturnTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+      book_id,bookType_id, book_name, book_writer,book_translator,book_public_date,book_public_house,book_num,book_price,book_isborrow,book_borrow_days,book_borrow_price
+  </sql>
+  <!-- 查询单个信息详情 -->
+  <select id="selectById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from book
+    where book_id = #{id}
+  </select>
+  
+  <!-- 插入数据 -->
+  <insert id="insert" parameterType="com.ambow.booksmanager.domain.Book">
+    insert into book values (null,#{bookTypeId}, #{bookName}, #{bookWriter}, 
+    #{bookTranslator}, #{bookPublicDate}, #{bookPublicHouse}, #{bookNum}, #{bookPrice}, #{bookState},#{bookIsborrow},#{bookBorrowDays},#{bookBorrowPrice},'1997-4-4')
+  </insert>
+   <!-- 修改信息 -->
+  <update id="update" parameterType="com.ambow.booksmanager.domain.Book">
+    update book set bookType_id = #{bookTypeId},book_name = #{bookName}, book_writer = #{bookWriter},book_translator = #{bookTranslator},
+    book_public_house = #{bookPublicHouse},book_borrow_days=#{bookBorrowDays},book_isborrow = #{bookIsborrow},book_borrow_price=#{bookBorrowPrice},
+    book_num = #{bookNum},book_price=#{bookPrice},book_public_date = #{bookPublicDate},book_return_time ="1990-10-01"
+    where book_id = #{bookId}
+  </update>
+  
+  
+  <!-- 自定义内容 -->
+  <resultMap id="ExtendResultMap" type="com.ambow.booksmanager.domain.Book" extends="BaseResultMap">
+  	<association property="bookType"  javaType="BookType" autoMapping="true">
+  		<id column="bookType_id"  property="bookTypeId" />
+    	<result column="bookType_name"  property="bookTypeName" />
+    	<result column="bookType_state"  property="bookTypeState" />
+  	</association>
+  </resultMap> 
+  <!-- 查询所有条信息,但不详细 -->
+  <select id="selectAll" resultMap="BaseResultMap">
+    select 
+     book_id, bookType_id,book_name,book_writer,book_num,book_price,book_isborrow,book_borrow_days,book_return_time
+    from book  where book_state = 1 
+    and ((NOW()-book_return_time)/60/60/24)>1
+  </select>
+  <!-- 查询所有 -->
+  <select id="selectAllBookType" resultMap="ExtendResultMap">
+  	SELECT  u.* , bt.bookType_name
+     FROM book u inner JOIN booktype bt 
+	<where>
+		u.bookType_id = bt.bookType_id and u.book_state = 1
+		and ((NOW()-u.book_return_time)/60/60/24)>1
+		<if test = "bookTypeId!=null and bookTypeId != ''">
+			and u.bookType_id = #{bookTypeId}
+		</if>
+		<if test="str!=null">
+			and concat(u.book_name,u.book_writer,u.book_public_house) like #{str}
+		</if>
+	</where>
+		
+	   ORDER BY u.book_id DESC limit #{page} , #{rows}
+  </select>
+  <!-- foreach 批量修改状态模拟删除 -->
+  <delete id="deleteByIds">
+    update book set book_state = 0 where  book_id in
+    (${ids})
+    
+  </delete>
+   <select id="selectBooksByStr" resultMap="BaseResultMap">
+  	SELECT * FROM book 
+  	where concat(book_name,book_writer,book_public_house) 
+  	like #{str}
+  	
+  </select>
+  <select id="selectAllType" resultType="com.ambow.booksmanager.domain.BookType">
+  	SELECT 
+     bookType_id,bookType_name  
+	FROM  booktype 
+	where bookType_state = 1
+	</select>
+	
+	<update id="updateState" parameterType="Integer">
+		UPDATE book SET book_state=0 WHERE book_id=#{bookId}
+	</update>
+	
+	<update id="updateTime" parameterType="Integer">
+		UPDATE book 
+		SET book_return_time=NOW() 
+		WHERE book_id=#{bookId}
+	</update>
+</mapper>
+

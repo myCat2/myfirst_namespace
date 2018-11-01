@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ambow.booksmanager.dao.RoleMapper">
+<update id="modify"
+		parameterType="com.ambow.booksmanager.domain.Emp">
+		update empinfo
+		set 
+		role_id = #{roleId}
+		where emp_id = #{empId}
+	</update>
+</mapper>

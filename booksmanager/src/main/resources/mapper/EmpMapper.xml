@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ambow.booksmanager.dao.EmpMapper">
+	<resultMap id="EmpMap"
+		type="com.ambow.booksmanager.domain.Emp" autoMapping="true">
+		<id column="emp_id" property="empId" />
+		<result column="emp_login_name" jdbcType="VARCHAR"
+			property="empLoginName" />
+		<result column="emp_login_pwd" jdbcType="VARCHAR"
+			property="empLoginPwd" />
+		<result column="emp_name" jdbcType="VARCHAR" property="empName" />
+		<result column="emp_sex" jdbcType="VARCHAR" property="empSex" />
+		<result column="emp_entry_date" jdbcType="TIMESTAMP"
+			property="empEntryDate" />
+		<result column="emp_tel" jdbcType="VARCHAR" property="empTel" />
+		<result column="emp_address" jdbcType="VARCHAR"
+			property="empAddress" />
+		<result column="emp_remark" jdbcType="VARCHAR"
+			property="empRemark" />
+		<result column="emp_state" property="empState" />
+		<result column="role_id" property="roleId" />
+	</resultMap>
+	<resultMap id="EmpRoleMap" type="com.ambow.booksmanager.domain.Emp" extends="EmpMap">
+  	<association property="role"  javaType="Role" autoMapping="true">
+  		<id column="role_id"  property="roleId" />
+    	<result column="role_name"  property="roleName" />
+    	<result column="role_description"  property="roleDescription" />
+  	</association>
+  </resultMap> 
+	 
+	<sql id="All_List">
+		emp_id, emp_login_name, emp_login_pwd, emp_name, emp_sex, emp_entry_date, emp_tel,
+		emp_address, emp_remark ,role_id
+	</sql>
+	<sql id="List">
+		emp_login_name,emp_login_pwd,emp_name, emp_sex, emp_tel,
+		emp_address, emp_remark
+	</sql>
+	<select id="findEmpById" parameterType="java.lang.Long"
+		resultMap="EmpMap">
+		select
+		<include refid="List" />
+		from empinfo where emp_id=#{empId}
+	</select>
+	<select id="findAllEmp" parameterType="java.lang.Long"
+		resultMap="EmpMap">
+		select
+		<include refid="All_List" />
+		from empinfo
+	</select>
+	<select id="findEmpRole" resultMap="EmpRoleMap">
+  	SELECT  e.* , r.role_name
+     FROM empinfo e inner JOIN role r 
+	on
+		e.role_id = r.role_id
+  </select>
+	
+	<delete id="removeEmp" parameterType="_int">
+		delete from empinfo
+		where
+		emp_id = #{empId}
+	</delete>
+	<insert id="saveEmp"
+		parameterType="com.ambow.booksmanager.domain.Emp">
+		insert into empinfo
+		(emp_login_name,emp_login_pwd, emp_name, emp_sex,
+		emp_entry_date,emp_tel,emp_address,emp_remark,emp_state,role_id)
+		values (
+		#{empLoginName,jdbcType=VARCHAR},
+		#{empLoginPwd,jdbcType=VARCHAR},
+		#{empName,jdbcType=VARCHAR},
+		#{empSex,jdbcType=VARCHAR},
+		NOW(),
+		#{empTel,jdbcType=VARCHAR},
+		#{empAddress,jdbcType=VARCHAR},
+		#{empRemark,jdbcType=VARCHAR},
+		1,1)
+	</insert>
+	
+	<update id="modifyEmp"
+		parameterType="com.ambow.booksmanager.domain.Emp">
+		update empinfo
+		set emp_login_name =
+		#{empLoginName,jdbcType=VARCHAR},
+		emp_login_pwd=#{empLoginPwd,jdbcType=VARCHAR},
+		emp_name=#{empName,jdbcType=VARCHAR},
+		emp_sex=#{empSex,jdbcType=VARCHAR},
+		emp_tel=#{empTel,jdbcType=VARCHAR},
+		emp_address=#{empAddress,jdbcType=VARCHAR},
+		emp_remark=#{empRemark,jdbcType=VARCHAR}
+		where emp_id = #{empId}
+	</update>
+	<update id="modifyPassWord"
+		parameterType="com.ambow.booksmanager.domain.Emp">
+		update empinfo
+		set 
+		emp_login_pwd=#{password}
+		where emp_id = #{id}
+	</update>
+	
+	<delete id="removeEmpByIds">
+		delete from empinfo where emp_id in (${ids})
+	</delete>
+	<select id="login" parameterType="com.ambow.booksmanager.domain.Emp"  resultMap="EmpRoleMap">
+		select
+		<include refid="All_List" />
+		from empinfo where 
+		emp_login_name =#{EmpLoginName}and
+		emp_login_pwd=#{EmpLoginPwd}and
+		role_id=#{type}
+	</select>
+	
+</mapper>

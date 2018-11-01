@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ambow.booksmanager.dao.ReaderMapper">
+
+  <resultMap id="BaseResultMap" type="com.ambow.booksmanager.domain.Reader" autoMapping="true">
+    <id column="reader_id" jdbcType="BIGINT" property="readerId" />
+    <result column="reader_name"  property="readerName" />
+    <result column="reader_sex"  property="readerSex" />
+    <result column="reader_date"  property="readerDate" />
+    <result column="reader_identity"  property="readerIdentity" />
+    <result column="reader_tel"  property="readerTel" />
+    <result column="reader_address"  property="readerAddress" />
+    <result column="reader_state"  property="readerState" />
+  </resultMap>
+  
+  <select id="queryReaderList" resultMap="BaseResultMap">
+  	select 
+    *
+    from reader
+    where reader_state=1
+	and concat(reader_id,reader_name,reader_date,reader_identity,
+	reader_tel,reader_address) like #{key}
+  </select>
+  
+  <select id="queryReaderById" resultType="Integer">
+  	SELECT COUNT(*) FROM reader WHERE reader_id=#{readerId}
+  </select>
+  
+  <insert id="insertReader" parameterType="com.ambow.booksmanager.domain.Reader">
+  	insert into reader(reader_name,reader_sex,reader_date,reader_identity
+  	,reader_tel,reader_address,reader_state)
+  	values(#{readerName},#{readerSex},NOW(),#{readerIdentity},
+  	#{readerTel},#{readerAddress},1)
+  </insert>
+  
+  <!-- 删除记录 -->
+  <update id="deleteReaderList">
+    update reader set reader_state=0
+    where reader_id in
+    <foreach collection="ids" open="(" close=")" item="id" separator=",">
+    	#{id}
+    </foreach>
+  </update>
+  
+  <update id="updateReader" parameterType="com.ambow.booksmanager.domain.Reader">
+  	update Reader
+  		<set>
+	  		<if test="readerName!=null || readerName!='' ">
+	  			reader_name=#{readerName},
+	  		</if>
+		  	<if test="readerSex!=null || readerSex!='' ">
+	  			reader_sex=#{readerSex},
+	  		</if>
+	  		<if test="readerIdentity!=null || readerIdentity!='' ">
+	  			reader_identity=#{readerIdentity},
+	  		</if>
+	  		<if test="readerTel!=null || readerTel!='' ">
+	  			reader_tel=#{readerTel},
+	  		</if>
+	  		<if test="readerAddress!=null || readerAddress!='' ">
+	  			reader_address=#{readerAddress}
+	  		</if>
+  		</set>  	
+  	where reader_id=#{readerId}
+  </update>
+  
+</mapper>

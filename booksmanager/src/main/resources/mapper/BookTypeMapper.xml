@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ambow.booksmanager.dao.BookTypeMapper">
+  <resultMap id="BaseResultMap" type="com.ambow.booksmanager.domain.BookType" autoMapping="true">
+      <id column="bookType_id"  property="bookTypeId" />
+	    <result column="bookType_name" property="bookTypeName" />
+	    <result column="bookType_state" jdbcType="VARCHAR" property="bookTypeState" />
+	</resultMap>
+	  <sql id="Base_Column_List">
+	      bookType_id, bookType_name ,bookType_state
+	   </sql>
+	  <!-- 查询信息所有 -->
+	  <select id="selectAllList" resultMap="BaseResultMap">
+	    select 
+	    <include refid="Base_Column_List" />
+	    from booktype
+	    <where> 
+	    bookType_state = 1
+	    <if test="str!=null">
+			and bookType_name like #{str}
+		</if>
+		</where>
+	    limit #{page} , #{rows}
+	  </select>
+	  <!-- 采购申请表的映射 -->
+	  <resultMap id="PurchaseResultMap" type="com.ambow.booksmanager.domain.Purchase" autoMapping="true">
+		    <id column="purchase_id"  property="purchaseId" />
+		    <result column="purchase_no" property="purchaseNo" />
+		    <result column="book_id"  property="bookId" />
+		    <result column="purchase_reason"  property="purchaseReason" />
+		  	<result column="purchase_date"  property="purchaseDate" />
+		   	<result column="purchase_state"  property="purchaseState" />
+		  	<result column="book_num"  property="bookNum" />
+		  	<result column="emp_id"  property="empId" />
+			<result column="purchase_remark"  property="purchaseRemark" />
+			<association property="book"  javaType="com.ambow.booksmanager.domain.Book">
+				 <id column="book_id" property="bookId" />
+	        	 <result column="book_name" property="bookName" />
+			</association>
+			<association property="emp"  javaType="com.ambow.booksmanager.domain.Emp">
+				 <id column="emp_id" property="empId" />
+	        	 <result column="emp_name" property="empName" />
+			</association>
+			
+  	</resultMap>
+	  
+	  <!-- 查询所有的申请 -->
+	   <select id="selectAllPurchase" resultMap="PurchaseResultMap">
+	    select b.book_id  ,b.book_name ,e.emp_id ,e.emp_name,p.*
+	    from book b, empinfo e, purchase p
+	    where   p.book_id = b.book_id and e.emp_id = p.emp_id
+	    and  p.purchase_state = 1 
+	    limit  #{page} , #{rows} 
+	  </select>
+	 
+	  <select id = "count" resultType="java.lang.Long">
+	  	select count(*) from booktype where bookType_id = 1
+	  </select>
+	  <select id = "getPurchaseCount" resultType="java.lang.Long">
+	  	select count(*) from purchase where purchase_state = 1
+	  </select>
+	  
+	  <select id="selectAllBookIdandName" resultType="com.ambow.booksmanager.domain.Book">
+	  	select book_id , book_name from book where book_state = 1
+	  </select>
+	  
+	  <select id = "getCount" resultType="java.lang.Long">
+	  	select count(*) from booktype where bookType_state = 1
+	  </select>
+	<!--  插入数据 --> 
+	  <insert id="insert" parameterType="com.ambow.booksmanager.domain.BookType">
+	    insert into booktype values (null,#{bookTypeName}, #{bookTypeState})
+	  </insert>
+	  
+	  <insert id="addapplacation" parameterType="com.ambow.booksmanager.domain.Purchase">
+	    insert into purchase values (null,#{purchaseNo}, #{bookId} , #{purchaseReason},#{purchaseDate},#{purchaseState},#{empId},#{purchaseRemark} )
+	  </insert>
+	  <!--   修改信息 --> 
+	  <update id="update" parameterType="com.ambow.booksmanager.domain.BookType">
+	    update booktype set bookType_name = #{bookTypeName} where bookType_id = #{bookTypeId}
+	  </update>
+	  
+	  <!-- 修改申请类型 -->
+	  <update id="updateType">
+	    update purchase set purchase_remark = "已通过"  where purchase_id in (${ids})
+	  </update>
+	  <!-- 批量上架书籍 -->
+	  <update id="updateUpBook">
+	    update book set book_state = 1  where book_id in (${bookids})
+	   
+	  </update>
+	  
+	   <!-- 下架书籍 -->
+ 	  <delete id="deleteBookById">
+	  	update book set book_state = 0 where book_id = #{bookId}
+    	
+	  </delete>
+	  <delete id="delete">
+	  	update booktype set bookType_state = 0 where bookType_id in
+    	(${ids})
+	  </delete>
+  </mapper> 
